@@ -1,22 +1,23 @@
 from datetime import datetime
 import logging
 from rid_lib.ext import Bundle
-from rid_lib.types import KoiNetNode, SlackMessage, SlackUser
+from rid_lib.types import KoiNetNode, SlackMessage, SlackUser, NormalizedText
 from koi_net.context import HandlerContext
 from koi_net.processor.handler import HandlerType
 from koi_net.processor.knowledge_object import KnowledgeObject
 from koi_net.protocol.node import NodeProfile
 from koi_net.protocol.edge import EdgeType, generate_edge_bundle
-from .rid_types import NormalizedText
 from .models import NormalizedTextObject
 from .core import node
 
 logger = logging.getLogger(__name__)
 
 
-@node.pipeline.register_handler(HandlerType.Bundle, 
+@node.pipeline.register_handler(
+    HandlerType.Bundle, 
     rid_types=[SlackMessage])
 def normalized_text_handler(ctx: HandlerContext, kobj: KnowledgeObject):
+    
     def get_author_name(msg_data: dict) -> str | None:
         user_rid = SlackUser(
             user_id=msg_data["user"],
@@ -30,7 +31,7 @@ def normalized_text_handler(ctx: HandlerContext, kobj: KnowledgeObject):
     if type(kobj.rid) is SlackMessage:
         n_text_obj = NormalizedTextObject(
             text=kobj.contents.get("text"),
-            author=get_author_name(kobj.contents),
+            authors=[get_author_name(kobj.contents)],
             created_at=datetime.fromtimestamp(float(kobj.rid.ts))
         )
         n_text_rid = NormalizedText(kobj.rid)
